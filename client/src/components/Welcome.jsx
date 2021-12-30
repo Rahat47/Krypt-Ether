@@ -2,7 +2,8 @@ import { AiFillPayCircle } from 'react-icons/ai';
 import { SiEthereum } from 'react-icons/si';
 import { BsInfoCircle } from 'react-icons/bs';
 import { Loader } from '.';
-import { useState } from 'react';
+import { useContext } from 'react';
+import { TransactionContext } from '../context/TransactionContext';
 
 const commonStyles =
     'min-h-[70px] sm:px-0 px-2 sm:min-w-[120px] flex justify-center items-center border-[0.5px] border-gray-400 text-sm font-light text-white';
@@ -17,27 +18,30 @@ const Input = ({ placeholder, type, name, value, handleChange }) => {
             placeholder={placeholder}
             step={0.0001}
             className='my-2 w-full rounded-sm p-2 outline-none bg-transparent text-white border-none text-sm white-glassmorphism'
+            min={0}
         />
     );
 };
 
 const Welcome = () => {
-    const [loading, setLoading] = useState(false);
-
-    const connectWallet = () => {
-        console.log('Not Implemented Yet!!!');
-    };
-
-    const handleChange = e => {
-        console.log(e.target.value);
-    };
+    const {
+        connectWallet,
+        currentAccount,
+        handleChange,
+        formData,
+        sendTransaction,
+        isLoading,
+    } = useContext(TransactionContext);
 
     const handleSubmit = e => {
+        const { addressTo, amount, keyword, message } = formData;
         e.preventDefault();
-        setLoading(true);
-        setTimeout(() => {
-            setLoading(false);
-        }, 3000);
+
+        if (!addressTo || !amount || !keyword || !message) {
+            return alert('Please fill all fields');
+        } else {
+            sendTransaction({ addressTo, amount, keyword, message });
+        }
     };
 
     return (
@@ -51,13 +55,15 @@ const Welcome = () => {
                         Explore the crypto world. Buy and sell crypto easily
                         with us.
                     </p>
-                    <button
-                        className='flex flex-row justify-center items-center my-5 bg-[#2952e3] p-3 rounded-full cursor-pointer hover:bg-[#2546bd] transition-all text-white text-base font-semibold'
-                        type='button'
-                        onClick={connectWallet}
-                    >
-                        Connect Wallet
-                    </button>
+                    {!currentAccount && (
+                        <button
+                            className='flex flex-row justify-center items-center my-5 bg-[#2952e3] p-3 rounded-full cursor-pointer hover:bg-[#2546bd] transition-all text-white text-base font-semibold'
+                            type='button'
+                            onClick={connectWallet}
+                        >
+                            Connect Wallet
+                        </button>
+                    )}
 
                     <div className='grid sm:grid-cols-3 grid-cols-2 w-full mt-2'>
                         <div className={`rounded-tl-2xl ${commonStyles}`}>
@@ -90,7 +96,10 @@ const Welcome = () => {
 
                             <div>
                                 <p className='text-white font-light text-sm'>
-                                    Address
+                                    {currentAccount
+                                        ? currentAccount.substring(0, 12) +
+                                          '...'
+                                        : 'Account'}
                                 </p>
 
                                 <p className='text-white font-semibold text-lg mt-1'>
@@ -106,29 +115,33 @@ const Welcome = () => {
                             name={'addressTo'}
                             type={'text'}
                             handleChange={handleChange}
+                            value={formData.addressTo}
                         />
                         <Input
                             placeholder={'Amount (ETH)'}
                             name={'amount'}
                             type={'number'}
                             handleChange={handleChange}
+                            value={formData.amount}
                         />
                         <Input
                             placeholder={'Keyword (Gif)'}
                             name={'keyword'}
                             type={'text'}
                             handleChange={handleChange}
+                            value={formData.keyword}
                         />
                         <Input
                             placeholder={'Enter Message'}
                             name={'message'}
                             type={'text'}
                             handleChange={handleChange}
+                            value={formData.message}
                         />
 
                         <div className='h-[1px] w-full bg-gray-400 my-2' />
 
-                        {loading ? (
+                        {isLoading ? (
                             <Loader />
                         ) : (
                             <button
